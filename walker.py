@@ -7,6 +7,7 @@ On: 9/27/19, 10:43 AM
 
 from rdkit import Chem
 
+
 class NeighboroodIterator:
 
     def __init__(self, mol, shell_count):

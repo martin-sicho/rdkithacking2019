@@ -10,7 +10,7 @@ from rdkit import Chem
 from typing import *
 
 
-class NeighboroodIterator:
+class NeighbourhoodIterator:
     def __init__(self, mol: Chem.Mol, shell_count: int):
         """ Derive shells for every atom in the molecule, where the number of shells equals shell_count
         :param mol:
@@ -54,7 +54,7 @@ class NeighboroodIterator:
 def check_toluene():
     smiles = "Cc1ccccc1"
     mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighboroodIterator(mol, 5)
+    iterator = NeighbourhoodIterator(mol, 5)
     iterator.iterate()
     expected = {0: [{1}, {2, 6}, {3, 5}, {4}, set()],
                 1: [{0, 2, 6}, {3, 5}, {4}, set(), set()],
@@ -72,7 +72,7 @@ def check_toluene():
 def check_ethanol():
     smiles = "CCO"
     mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighboroodIterator(mol, 3)
+    iterator = NeighbourhoodIterator(mol, 3)
     expected = {0: [{1}, {2}, set()],
                 1: [{0, 2}, set(), set()],
                 2: [{1}, {0}, set()],
@@ -89,7 +89,7 @@ def run_checks():
 def main():
     smiles = "Cc1ccccc1"
     mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighboroodIterator(mol, 5)
+    iterator = NeighbourhoodIterator(mol, 5)
     iterator.iterate()
     print(iterator.atom_shell_atoms[1])
     print(len(iterator.atom_shell_atoms[0]))
