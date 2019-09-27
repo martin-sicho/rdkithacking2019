@@ -9,18 +9,27 @@ On: 9/27/19, 10:43 AM
 from rdkit import Chem
 from typing import *
 
+class ShellCollector:
 
-class NeighbourhoodIterator:
     def __init__(self, mol: Chem.Mol, shell_count: int):
-        """ Derive shells for every atom in the molecule, where the number of shells equals shell_count
+        """
+        Handle collection of shells for one molecule.
+
         :param mol:
         :param shell_count:
         """
-
-        self.mol: Chem.Mol = mol
-        self.shell_count: int = shell_count
+        self.shell_count = shell_count
+        self.mol = mol
         self.atom_shell_atoms: dict = dict()
-        self.iterate()
+
+    def collect(self, atm_idx, shells):
+        self.atom_shell_atoms[atm_idx] = shells
+
+class NeighbourhoodIterator:
+    def __init__(self, collector):
+        """ Derive shells for every atom in the molecule, where the number of shells equals shell_count
+        """
+        self.collector = collector
 
     def _atom_shells(self, atm: int) -> List[Set[int]]:
         """Return the Atoms in the shell
@@ -32,29 +41,30 @@ class NeighbourhoodIterator:
         shells: List[Set[int]] = []  # List of Shells (set of atomidx (int))
         current_iter_atomts: Set[int] = {atm}  # Set of atoms for current iteration, initialized with central-atom
         prev_atms = {atm}  # Atoms already in inner shells, used to avoid occurrence in multiple shells
-        for i in range(self.shell_count):  # type: Chem.Atom
+        for i in range(self.collector.shell_count):  # type: Chem.Atom
             next_iter_atoms: Set[int] = set()
             # Add neighbours of atoms in previous shell (potential candidates for next shell)
             for j_atm in current_iter_atomts:  # type: int
-                j_atm_obj: Chem.Atom = self.mol.GetAtomWithIdx(j_atm)
+                j_atm_obj: Chem.Atom = self.collector.mol.GetAtomWithIdx(j_atm)
                 next_iter_atoms.update([k_atm.GetIdx() for k_atm in j_atm_obj.GetNeighbors()])
             # Add atoms as shell if not in one of the previous shells
             shells.append(next_iter_atoms - prev_atms)
             # Update for next loop
             current_iter_atomts = next_iter_atoms - prev_atms
             prev_atms.update(next_iter_atoms)
-        assert len(shells) == self.shell_count
+        assert len(shells) == self.collector.shell_count
         return shells
 
     def iterate(self):
-        for atm in self.mol.GetAtoms():  #type: Chem.Atom
-            self.atom_shell_atoms[atm.GetIdx()] = self._atom_shells(atm.GetIdx())
+        for atm in self.collector.mol.GetAtoms():  #type: Chem.Atom
+            self.collector.collect(atm.GetIdx(), self._atom_shells(atm.GetIdx()))
 
 
 def check_toluene():
     smiles = "Cc1ccccc1"
     mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighbourhoodIterator(mol, 5)
+    collector = ShellCollector(mol, 5)
+    iterator = NeighbourhoodIterator(collector=collector)
     iterator.iterate()
     expected = {0: [{1}, {2, 6}, {3, 5}, {4}, set()],
                 1: [{0, 2, 6}, {3, 5}, {4}, set(), set()],
@@ -65,36 +75,33 @@ def check_toluene():
                 6: [{1, 5}, {0, 2, 4}, {3}, set(), set()],
                 }
 
-    assert iterator.atom_shell_atoms == expected
+    assert collector.atom_shell_atoms == expected
     print("Passed check on toluene")
 
 
 def check_ethanol():
     smiles = "CCO"
     mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighbourhoodIterator(mol, 3)
+    collector = ShellCollector(mol, 3)
+    iterator = NeighbourhoodIterator(collector=collector)
+    iterator.iterate()
     expected = {0: [{1}, {2}, set()],
                 1: [{0, 2}, set(), set()],
                 2: [{1}, {0}, set()],
                 }
-    assert iterator.atom_shell_atoms == expected
+    assert collector.atom_shell_atoms == expected
     print("Passed check on ethanol")
 
 
 def run_checks():
+    # TODO: maybe these should be turned into proper unit tests?
     check_toluene()
     check_ethanol()
 
 
 def main():
-    smiles = "Cc1ccccc1"
-    mol = Chem.MolFromSmiles(smiles)
-    iterator = NeighbourhoodIterator(mol, 5)
-    iterator.iterate()
-    print(iterator.atom_shell_atoms[1])
-    print(len(iterator.atom_shell_atoms[0]))
+    run_checks()
 
 
 if __name__ == "__main__":
     main()
-    run_checks()
