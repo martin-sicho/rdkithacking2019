@@ -23,7 +23,7 @@ class NeighboroodIterator:
             neighborhood_map[atm_index] = set(atoms_current)
             # TODO: collector code for the first atom here
 
-            for i in range(self.shell_count):
+            for i in range(self.shell_count): # this just iterates over the graph, but we could also take into account real distance in 3D and stuff
                 atoms_next.clear()
                 for atm_current in atoms_current:
                     neighbors = atm_current.GetNeighbors()
