@@ -9,11 +9,16 @@ On: 9/27/19, 10:43 AM
 from rdkit import Chem
 from typing import *
 
-class ShellCollector:
+class ShellDescriptor:
+    """
+    This is an example of how the descriptor interface could look like.
+
+    """
 
     def __init__(self, mol: Chem.Mol, shell_count: int):
         """
-        Handle collection of shells for one molecule.
+        Initialize the instance (say what molecule
+        and how many shells to use).
 
         :param mol:
         :param shell_count:
@@ -23,47 +28,58 @@ class ShellCollector:
         self.atom_shell_atoms: dict = dict()
 
     def collect(self, atm_idx, shells):
+        """
+        Process shells for a certain atom index.
+        This is where the aggregation/averaging/sorting code
+        will go to. Right now we just store the shells.
+
+        :param atm_idx:
+        :param shells:
+        :return:
+        """
+
         self.atom_shell_atoms[atm_idx] = shells
 
 class NeighbourhoodIterator:
     def __init__(self, collector):
-        """ Derive shells for every atom in the molecule, where the number of shells equals shell_count
+        """
+        Derive shells for every atom in the molecule, where the number of shells equals shell_count
+
+        :param collector This is the descriptor implementation which collects the shells to make calculations.
         """
         self.collector = collector
 
-    def _atom_shells(self, atm: int) -> List[Set[int]]:
-        """Return the Atoms in the shell
-        first list represents the shells (set) containing the atom-indices (int)
+    def iterate(self):
+        """
+        Iterate over all atoms, find the atoms in the shells and provide the shells to the descriptor collector method.
 
-        :param atm:
         :return:
         """
-        shells: List[Set[int]] = []  # List of Shells (set of atomidx (int))
-        current_iter_atomts: Set[int] = {atm}  # Set of atoms for current iteration, initialized with central-atom
-        prev_atms = {atm}  # Atoms already in inner shells, used to avoid occurrence in multiple shells
-        for i in range(self.collector.shell_count):  # type: Chem.Atom
-            next_iter_atoms: Set[int] = set()
-            # Add neighbours of atoms in previous shell (potential candidates for next shell)
-            for j_atm in current_iter_atomts:  # type: int
-                j_atm_obj: Chem.Atom = self.collector.mol.GetAtomWithIdx(j_atm)
-                next_iter_atoms.update([k_atm.GetIdx() for k_atm in j_atm_obj.GetNeighbors()])
-            # Add atoms as shell if not in one of the previous shells
-            shells.append(next_iter_atoms - prev_atms)
-            # Update for next loop
-            current_iter_atomts = next_iter_atoms - prev_atms
-            prev_atms.update(next_iter_atoms)
-        assert len(shells) == self.collector.shell_count
-        return shells
 
-    def iterate(self):
-        for atm in self.collector.mol.GetAtoms():  #type: Chem.Atom
-            self.collector.collect(atm.GetIdx(), self._atom_shells(atm.GetIdx()))
+        for atom in self.collector.mol.GetAtoms():  #type: Chem.Atom
+            atm_idx = atom.GetIdx()
+            shells: List[Set[int]] = []  # List of Shells (set of atomidx (int))
+            current_iter_atomts: Set[int] = {atm_idx}  # Set of atoms for current iteration, initialized with central-atom
+            prev_atms = {atm_idx}  # Atoms already in inner shells, used to avoid occurrence in multiple shells
+            for i in range(self.collector.shell_count):  # type: Chem.Atom
+                next_iter_atoms: Set[int] = set()
+                # Add neighbours of atoms in previous shell (potential candidates for next shell)
+                for j_atm in current_iter_atomts:  # type: int
+                    j_atm_obj: Chem.Atom = self.collector.mol.GetAtomWithIdx(j_atm)
+                    next_iter_atoms.update([k_atm.GetIdx() for k_atm in j_atm_obj.GetNeighbors()])
+                # Add atoms as shell if not in one of the previous shells
+                shells.append(next_iter_atoms - prev_atms)
+                # Update for next loop
+                current_iter_atomts = next_iter_atoms - prev_atms
+                prev_atms.update(next_iter_atoms)
+            assert len(shells) == self.collector.shell_count
+            self.collector.collect(atm_idx, shells)
 
 
 def check_toluene():
     smiles = "Cc1ccccc1"
     mol = Chem.MolFromSmiles(smiles)
-    collector = ShellCollector(mol, 5)
+    collector = ShellDescriptor(mol, 5)
     iterator = NeighbourhoodIterator(collector=collector)
     iterator.iterate()
     expected = {0: [{1}, {2, 6}, {3, 5}, {4}, set()],
@@ -82,7 +98,7 @@ def check_toluene():
 def check_ethanol():
     smiles = "CCO"
     mol = Chem.MolFromSmiles(smiles)
-    collector = ShellCollector(mol, 3)
+    collector = ShellDescriptor(mol, 3)
     iterator = NeighbourhoodIterator(collector=collector)
     iterator.iterate()
     expected = {0: [{1}, {2}, set()],
@@ -94,14 +110,13 @@ def check_ethanol():
 
 
 def run_checks():
-    # TODO: maybe these should be turned into proper unit tests?
+    # TODO: maybe these methods should be turned into proper unit tests eventually...
     check_toluene()
     check_ethanol()
 
 
 def main():
     run_checks()
-
 
 if __name__ == "__main__":
     main()
