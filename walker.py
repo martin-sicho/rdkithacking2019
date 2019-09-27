@@ -24,14 +24,18 @@ class NeighboroodIterator:
             # TODO: collector code for the first atom here
 
             for i in range(self.shell_count): # this just iterates over the graph, but we could also take into account real distance in 3D and stuff
+
                 atoms_next.clear()
                 for atm_current in atoms_current:
                     neighbors = atm_current.GetNeighbors()
                     atoms_next.update(neighbors)
                     # remove hydrogens code here if we need it
-
-                if i > 0:
-                    atoms_next.difference_update(neighborhood_map.get(i-1))
+                
+                shell_index = i-1
+                if shell_index > 0: 
+                    # The error was coming from i - 1, since there's no key in neighborhood_map = 0. So I just calculated the shell_index var before the if
+                    # and now it filters that as greater than 0. I don't know if it makes sense from a chemistry point of view but it works pythonically speaking
+                    atoms_next.difference_update(neighborhood_map.get(shell_index))
 
                 neighborhood_map[i+1] = set(atoms_next)
                 # TODO: collection code here again
@@ -44,7 +48,7 @@ def main():
     mol = Chem.MolFromSmiles(smiles)
     iterator = NeighboroodIterator(mol, 5)
     iterator.iterate()
-
+  
 if __name__ == "__main__":
     main()
 
