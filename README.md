@@ -5,7 +5,7 @@ This project was created on the RDKit UGM 2019 Hackathon and it comprises of a s
 ## Example Usage
 
 ```python
-from descriptors.average import AverageShell
+from shelldesc.average import AverageShell
 from rdkit import Chem
 
 #imatinib

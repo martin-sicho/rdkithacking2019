@@ -5,7 +5,7 @@ Created by: Martin Sicho, Christoph Bauer
 On: 9/27/19, 3:33 PM
 """
 
-from descriptors._base import ShellDescriptorBase
+from shelldesc._base import ShellDescriptorBase
 
 class AverageShell(ShellDescriptorBase):
     """

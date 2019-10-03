@@ -6,7 +6,7 @@ On: 9/27/19, 3:25 PM
 """
 
 from rdkit import Chem
-from descriptors._base import ShellDescriptorBase
+from shelldesc._base import ShellDescriptorBase
 
 class Simple(ShellDescriptorBase):
     """
