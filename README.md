@@ -2,7 +2,7 @@
 
 This project was created on the RDKit UGM 2019 Hackathon and it comprises of a simple Python package to calculate circular atomic descriptors based on EHT charges of neighboring atoms. So far only a few very basic descriptors are calculated, but it should be easy to add more variants under the common `ShellDescriptorBase` interface.
 
-# Example Usage
+## Example Usage
 
 ```python
 from descriptors.average import AverageShell
