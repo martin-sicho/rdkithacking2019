@@ -6,6 +6,7 @@ This project was created on the RDKit UGM 2019 Hackathon and it comprises of a s
 
 ```python
 from descriptors.average import AverageShell
+from rdkit import Chem
 
 #imatinib
 smiles = 'Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1'

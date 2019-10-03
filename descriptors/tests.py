@@ -6,7 +6,7 @@ On: 10/3/19, 4:51 PM
 """
 
 import unittest
-from rdkit.Chem import AllChem as Chem
+from rdkit import Chem
 from descriptors.average import AverageShell
 from descriptors.simple import Simple
 
