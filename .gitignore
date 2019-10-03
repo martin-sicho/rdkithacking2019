@@ -106,3 +106,8 @@ venv.bak/
 # pycharm stuff
 
 /.idea/*
+
+# project specific stuff
+
+nul
+run.out
